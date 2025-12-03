@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kingshot Gear Calculator - 6 Items</title>
+    <script src="https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --border-color: #dcdde1;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .lang-selector {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .lang-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .lang-btn:hover {
+            background: #e9ecef;
+        }
+
+        .lang-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        .materials-section {
+            background-color: var(--secondary-color);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .gear-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .gear-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .gear-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .gear-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--secondary-color);
+            padding-bottom: 10px;
+        }
+
+        .gear-icon {
+            font-size: 2em;
+        }
+
+        .gear-name {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #666;
+        }
+
+        input, select {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #357abd;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .result-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .highlight {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .path-list {
+            list-style: none;
+            padding: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .path-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+        }
+
+        .path-item:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        .path-item:last-child {
+            border-bottom: none;
+        }
+
+        .path-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .material-cost {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .remaining-materials {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .mat-box {
+            background: var(--secondary-color);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .mat-label {
+            display: block;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .mat-value {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        .gear-priority {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .priority-label {
+            font-size: 0.85em;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .priority-select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9em;
+            width: auto;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .priority-select:hover {
+            border-color: var(--primary-color);
+        }
+
+        /* Priority Level Styles */
+        .p-high { border-left: 4px solid #e74c3c; }
+        .p-med { border-left: 4px solid #f1c40f; }
+        .p-low { border-left: 4px solid #2ecc71; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="lang-selector">
+            <button class="lang-btn" onclick="changeLanguage('tr')">🇹🇷 TR</button>
+            <button class="lang-btn" onclick="changeLanguage('en')">🇬🇧 EN</button>
+            <button class="lang-btn" onclick="changeLanguage('de')">🇩🇪 DE</button>
+        </div>
+
+        <h1 data-i18n="title">⚙️ Gelişmiş Teçhizat Yükseltme Hesaplayıcısı</h1>
+
+        <!-- Screenshot Section -->
+        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 2px dashed #4a90e2;">
+            <h3 style="margin-top: 0; color: #1565c0;" data-i18n="ocrTitle">📸 Ekran Görüntüsü ile Otomatik Doldur (Beta)</h3>
+            <p style="font-size: 0.9em; color: #555;" data-i18n="ocrDesc">Oyun içi karakter ekranının veya envanterin ekran görüntüsünü yükleyin. Kutucukları eşyaların üzerine sürükleyip "Analiz Et" butonuna basın.</p>
+            
+            <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+            
+            <div id="imageEditor" style="display: none; margin-top: 20px; position: relative;">
+                <div style="overflow: auto; max-height: 600px; border: 1px solid #ccc; position: relative;">
+                    <canvas id="imageCanvas"></canvas>
+                    <div id="markersContainer"></div>
+                </div>
+                <button onclick="analyzeScreenshot()" style="margin-top: 10px; background-color: #2ecc71;" data-i18n="analyzeBtn">🔍 Analiz Et ve Doldur</button>
+                <p id="analysisStatus" style="margin-top: 10px; font-weight: bold; color: #666;"></p>
+            </div>
+        </div>
+
+        <h3 data-i18n="step1">1. Malzemelerinizi Girin</h3>
+    <div class="materials-section">
+        <div class="form-group">
+            <label for="satin">Satin 📜</label>
+            <input type="number" id="satin" min="0" value="0" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label for="gilded">Gilded Threads 🧵</label>
+            <input type="number" id="gilded" min="0" value="0" placeholder="0">
+        </div>
+        <div class="form-group">
+            <label for="vision">Artisan's Vision 📜</label>
+            <input type="number" id="vision" min="0" value="0" placeholder="0">
+        </div>
+    </div>
+
+    <h3 data-i18n="step2">2. Teçhizat Durumlarını ve Önceliklerini Seçin</h3>
+    <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em; border: 1px solid #ffeeba;" data-i18n="priorityInfo">
+        ℹ️ <strong>Öncelik Sistemi:</strong> "Yüksek" seçilen eşyalar, maliyeti ne olursa olsun diğerlerinden önce yükseltilmeye çalışılır. "Normal" varsayılan değerdir. "Düşük" ise en son yükseltilir.
+    </div>
+    <div id="gearGrid" class="gear-grid">
+        <!-- Generated by JS -->
+    </div>
+
+    <button onclick="calculateAllUpgrades()" data-i18n="calcBtn">🚀 Hesapla ve Optimize Et</button>
+
+    <div id="results" class="result-section">
+        <div class="result-card">
+            <h3 data-i18n="resultTitle">📊 Toplam Sonuç</h3>
+            <p><span data-i18n="startPower">Başlangıç Toplam Güç</span>: <span id="startPower">0</span></p>
+            <p><span data-i18n="finalPower">Nihai Toplam Güç</span>: <span id="finalTotalPower" class="highlight">0</span></p>
+            <p><span data-i18n="powerGain">Güç Artışı</span>: <span id="powerGain" style="color: var(--success-color); font-weight: bold;">+0</span></p>
+            
+            <h4 data-i18n="remainingMat">Kalan Malzemeler:</h4>
+            <div class="remaining-materials">
+                <div class="mat-box">
+                    <span class="mat-label">Satin</span>
+                    <span id="remSatin" class="mat-value">0</span>
+                </div>
+                <div class="mat-box">
+                    <span class="mat-label">Gilded Threads</span>
+                    <span id="remGilded" class="mat-value">0</span>
+                </div>
+                <div class="mat-box">
+                    <span class="mat-label">Artisan's Vision</span>
+                    <span id="remVision" class="mat-value">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-card">
+            <h4 data-i18n="upgradePath">📋 Adım Adım Yükseltme Yolu</h4>
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 10px;" data-i18n="pathNote">*En düşük maliyetli yükseltmeler önceliklendirilmiştir.</p>
+            <ul id="upgradePath" class="path-list">
+                <!-- Path items populated by JS -->
+            </ul>
+        </div>
+
+        <div class="result-card">
+            <h4 data-i18n="finalStates">🏁 Nihai Teçhizat Durumları</h4>
+            <div id="finalGearStates" class="gear-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <!-- Final states -->
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #888; font-size: 0.9em;">
+            <p>571 server FAB Virtuose made this. You can feel free to share this <3</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const translations = {
+        tr: {
+            title: "⚙️ Gelişmiş Teçhizat Yükseltme Hesaplayıcısı",
+            ocrTitle: "📸 Ekran Görüntüsü ile Otomatik Doldur (Beta)",
+            ocrDesc: "Oyun içi karakter ekranının veya envanterin ekran görüntüsünü yükleyin. Kutucukları eşyaların üzerine sürükleyip 'Analiz Et' butonuna basın.",
+            analyzeBtn: "🔍 Analiz Et ve Doldur",
+            step1: "1. Malzemelerinizi Girin",
+            step2: "2. Teçhizat Durumlarını ve Önceliklerini Seçin",
+            priorityInfo: "ℹ️ <strong>Öncelik Sistemi:</strong> 'Yüksek' seçilen eşyalar, maliyeti ne olursa olsun diğerlerinden önce yükseltilmeye çalışılır. 'Normal' varsayılan değerdir. 'Düşük' ise en son yükseltilir.",
+            calcBtn: "🚀 Hesapla ve Optimize Et",
+            resultTitle: "📊 Toplam Sonuç",
+            startPower: "Başlangıç Toplam Güç",
+            finalPower: "Nihai Toplam Güç",
+            powerGain: "Güç Artışı",
+            remainingMat: "Kalan Malzemeler:",
+            upgradePath: "📋 Adım Adım Yükseltme Yolu",
+            pathNote: "*En düşük maliyetli yükseltmeler önceliklendirilmiştir.",
+            finalStates: "🏁 Nihai Teçhizat Durumları",
+            analyzing: "Analiz ediliyor... Lütfen bekleyin (OCR işlemi biraz sürebilir).",
+            analyzeDone: "Analiz tamamlandı! Lütfen değerleri kontrol edin.",
+            invalidData: "Bazı teçhizat verileri geçersiz!",
+            noUpgrade: "Yükseltme yapılamadı veya malzemeler yetersiz.",
+            power: "Güç",
+            priorityHigh: "🔥 Yüksek",
+            priorityMed: "Normal ⚖️",
+            priorityLow: "💤 Düşük",
+            currentTier: "Mevcut Aşama",
+            currentStars: "Mevcut Yıldız",
+            priorityLabel: "Öncelik:",
+            gearNames: {
+                hat: "Şapka", necklace: "Kolye", coat: "Ceket",
+                pants: "Pantolon", ring: "Yüzük", weapon: "Silah"
+            },
+            starsSuffix: " Yıldız"
+        },
+        en: {
+            title: "⚙️ Advanced Gear Upgrade Calculator",
+            ocrTitle: "📸 Auto-Fill via Screenshot (Beta)",
+            ocrDesc: "Upload a screenshot of your character screen or inventory. Drag the boxes over the items and click 'Analyze'.",
+            analyzeBtn: "🔍 Analyze and Fill",
+            step1: "1. Enter Your Materials",
+            step2: "2. Select Gear States and Priorities",
+            priorityInfo: "ℹ️ <strong>Priority System:</strong> 'High' priority items are upgraded first regardless of cost. 'Normal' is default. 'Low' is upgraded last.",
+            calcBtn: "🚀 Calculate and Optimize",
+            resultTitle: "📊 Total Results",
+            startPower: "Starting Total Power",
+            finalPower: "Final Total Power",
+            powerGain: "Power Gain",
+            remainingMat: "Remaining Materials:",
+            upgradePath: "📋 Upgrade Path Step-by-Step",
+            pathNote: "*Lowest cost upgrades are prioritized.",
+            finalStates: "🏁 Final Gear States",
+            analyzing: "Analyzing... Please wait (OCR might take a moment).",
+            analyzeDone: "Analysis complete! Please check the values.",
+            invalidData: "Some gear data is invalid!",
+            noUpgrade: "No upgrades possible or insufficient materials.",
+            power: "Power",
+            priorityHigh: "🔥 High",
+            priorityMed: "Normal ⚖️",
+            priorityLow: "💤 Low",
+            currentTier: "Current Tier",
+            currentStars: "Current Stars",
+            priorityLabel: "Priority:",
+            gearNames: {
+                hat: "Hat", necklace: "Necklace", coat: "Coat",
+                pants: "Pants", ring: "Ring", weapon: "Weapon"
+            },
+            starsSuffix: " Star(s)"
+        },
+        de: {
+            title: "⚙️ Erweiterter Ausrüstungs-Rechner",
+            ocrTitle: "📸 Automatisch Ausfüllen per Screenshot (Beta)",
+            ocrDesc: "Lade einen Screenshot deines Charakterbildschirms oder Inventars hoch. Ziehe die Boxen über die Gegenstände und klicke auf 'Analysieren'.",
+            analyzeBtn: "🔍 Analysieren und Füllen",
+            step1: "1. Materialien eingeben",
+            step2: "2. Ausrüstungsstatus und Prioritäten wählen",
+            priorityInfo: "ℹ️ <strong>Prioritätssystem:</strong> Gegenstände mit 'Hoch' werden unabhängig von den Kosten zuerst verbessert. 'Normal' ist Standard. 'Niedrig' zuletzt.",
+            calcBtn: "🚀 Berechnen und Optimieren",
+            resultTitle: "📊 Gesamtergebnis",
+            startPower: "Start-Gesamtstärke",
+            finalPower: "End-Gesamtstärke",
+            powerGain: "Stärke-Gewinn",
+            remainingMat: "Verbleibende Materialien:",
+            upgradePath: "📋 Schritt-für-Schritt-Verbesserungspfad",
+            pathNote: "*Günstigste Verbesserungen werden priorisiert.",
+            finalStates: "🏁 Endgültiger Ausrüstungsstatus",
+            analyzing: "Analysiere... Bitte warten (OCR kann einen Moment dauern).",
+            analyzeDone: "Analyse abgeschlossen! Bitte Werte überprüfen.",
+            invalidData: "Einige Ausrüstungsdaten sind ungültig!",
+            noUpgrade: "Keine Verbesserungen möglich oder unzureichende Materialien.",
+            power: "Stärke",
+            priorityHigh: "🔥 Hoch",
+            priorityMed: "Normal ⚖️",
+            priorityLow: "💤 Niedrig",
+            currentTier: "Aktuelle Stufe",
+            currentStars: "Aktuelle Sterne",
+            priorityLabel: "Priorität:",
+            gearNames: {
+                hat: "Hut", necklace: "Halskette", coat: "Mantel",
+                pants: "Hose", ring: "Ring", weapon: "Waffe"
+            },
+            starsSuffix: " Stern(e)"
+        }
+    };
+
+    let currentLang = 'tr';
+
+    // Data extracted from provided images
+    const gearData = [
+        { tier: "Green", stars: 0, cost: { satin: 1500, gilded: 15, vision: 0 }, power: 224400 },
+        { tier: "Green", stars: 1, cost: { satin: 3800, gilded: 40, vision: 0 }, power: 306000 },
+        { tier: "Blue", stars: 0, cost: { satin: 7000, gilded: 70, vision: 0 }, power: 408000 },
+        { tier: "Blue", stars: 1, cost: { satin: 9700, gilded: 95, vision: 0 }, power: 510000 },
+        { tier: "Blue", stars: 2, cost: { satin: 1000, gilded: 10, vision: 45 }, power: 612000 },
+        { tier: "Blue", stars: 3, cost: { satin: 1000, gilded: 10, vision: 50 }, power: 714000 },
+        { tier: "Purple", stars: 0, cost: { satin: 1500, gilded: 15, vision: 60 }, power: 816000 },
+        { tier: "Purple", stars: 1, cost: { satin: 1500, gilded: 15, vision: 70 }, power: 885360 },
+        { tier: "Purple", stars: 2, cost: { satin: 6500, gilded: 65, vision: 40 }, power: 954720 },
+        { tier: "Purple", stars: 3, cost: { satin: 8000, gilded: 80, vision: 50 }, power: 1024080 },
+        { tier: "Purple T1", stars: 0, cost: { satin: 10000, gilded: 95, vision: 60 }, power: 1093440 },
+        { tier: "Purple T1", stars: 1, cost: { satin: 11000, gilded: 110, vision: 70 }, power: 1162800 },
+        { tier: "Purple T1", stars: 2, cost: { satin: 13000, gilded: 130, vision: 85 }, power: 1232160 },
+        { tier: "Purple T1", stars: 3, cost: { satin: 15000, gilded: 160, vision: 100 }, power: 1301520 },
+        { tier: "Gold", stars: 0, cost: { satin: 22000, gilded: 220, vision: 40 }, power: 1362720 },
+        { tier: "Gold", stars: 1, cost: { satin: 23000, gilded: 230, vision: 40 }, power: 1423920 },
+        { tier: "Gold", stars: 2, cost: { satin: 25000, gilded: 250, vision: 45 }, power: 1485120 },
+        { tier: "Gold", stars: 3, cost: { satin: 26000, gilded: 260, vision: 45 }, power: 1546320 },
+        { tier: "Gold T1", stars: 0, cost: { satin: 28000, gilded: 280, vision: 45 }, power: 1607520 },
+        { tier: "Gold T1", stars: 1, cost: { satin: 30000, gilded: 300, vision: 55 }, power: 1668720 },
+        { tier: "Gold T1", stars: 2, cost: { satin: 32000, gilded: 320, vision: 55 }, power: 1729920 },
+        { tier: "Gold T1", stars: 3, cost: { satin: 35000, gilded: 340, vision: 55 }, power: 1791120 },
+        { tier: "Gold T2", stars: 0, cost: { satin: 38000, gilded: 390, vision: 55 }, power: 1852320 },
+        { tier: "Gold T2", stars: 1, cost: { satin: 43000, gilded: 430, vision: 75 }, power: 1913520 },
+        { tier: "Gold T2", stars: 2, cost: { satin: 45000, gilded: 460, vision: 80 }, power: 1974720 },
+        { tier: "Gold T2", stars: 3, cost: { satin: 48000, gilded: 500, vision: 85 }, power: 2040000 },
+        { tier: "Gold T3", stars: 0, cost: { satin: 60000, gilded: 600, vision: 120 }, power: 2097120 },
+        { tier: "Gold T3", stars: 1, cost: { satin: 70000, gilded: 700, vision: 140 }, power: 2158320 },
+        { tier: "Gold T3", stars: 2, cost: { satin: 80000, gilded: 800, vision: 160 }, power: 2219520 },
+        { tier: "Gold T3", stars: 3, cost: { satin: 90000, gilded: 900, vision: 180 }, power: 2280000 },
+        { tier: "Red", stars: 0, cost: { satin: 108000, gilded: 1080, vision: 220 }, power: 2340000 },
+        { tier: "Red", stars: 1, cost: { satin: 114000, gilded: 1140, vision: 230 }, power: 2400000 },
+        { tier: "Red", stars: 2, cost: { satin: 121000, gilded: 1210, vision: 240 }, power: 2460000 },
+        { tier: "Red", stars: 3, cost: { satin: 128000, gilded: 1280, vision: 250 }, power: 2520000 },
+        { tier: "Red T1", stars: 0, cost: { satin: 154000, gilded: 1540, vision: 300 }, power: 2580000 },
+        { tier: "Red T1", stars: 1, cost: { satin: 163000, gilded: 1630, vision: 320 }, power: 2640000 },
+        { tier: "Red T1", stars: 2, cost: { satin: 173000, gilded: 1730, vision: 340 }, power: 0 },
+        { tier: "Red T1", stars: 3, cost: { satin: 183000, gilded: 1830, vision: 360 }, power: 0 },
+        { tier: "Red T2", stars: 0, cost: { satin: 220000, gilded: 2200, vision: 430 }, power: 0 },
+        { tier: "Red T2", stars: 1, cost: { satin: 233000, gilded: 2330, vision: 460 }, power: 0 },
+        { tier: "Red T2", stars: 2, cost: { satin: 247000, gilded: 2470, vision: 490 }, power: 0 },
+        { tier: "Red T2", stars: 3, cost: { satin: 264000, gilded: 2640, vision: 520 }, power: 0 },
+        { tier: "Red T3", stars: 0, cost: { satin: 306000, gilded: 3060, vision: 610 }, power: 0 },
+        { tier: "Red T3", stars: 1, cost: { satin: 323000, gilded: 3230, vision: 650 }, power: 0 },
+        { tier: "Red T3", stars: 2, cost: { satin: 340000, gilded: 3400, vision: 690 }, power: 0 },
+        { tier: "Red T3", stars: 3, cost: { satin: 357000, gilded: 3570, vision: 730 }, power: 0 },
+        { tier: "Red T4", stars: 0, cost: { satin: 412000, gilded: 4120, vision: 840 }, power: 0 },
+        { tier: "Red T4", stars: 1, cost: { satin: 433000, gilded: 4330, vision: 890 }, power: 0 },
+        { tier: "Red T4", stars: 2, cost: { satin: 454000, gilded: 4540, vision: 940 }, power: 0 },
+        { tier: "Red T4", stars: 3, cost: { satin: 475000, gilded: 4750, vision: 990 }, power: 0 }
+    ];
+
+    const gearTypes = [
+        { id: 'hat', icon: '🎩' },
+        { id: 'necklace', icon: '📿' },
+        { id: 'coat', icon: '🧥' },
+        { id: 'pants', icon: '👖' },
+        { id: 'ring', icon: '💍' },
+        { id: 'weapon', icon: '🪄' }
+    ];
+
+    // --- SCREENSHOT ANALYSIS LOGIC ---
+    let uploadedImage = null;
+    const markers = {};
+
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                setupCanvas(img);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function setupCanvas(img) {
+        uploadedImage = img;
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const editor = document.getElementById('imageEditor');
+        const container = document.getElementById('markersContainer');
+
+        // Scale image to fit width if huge
+        let scale = 1;
+        if (img.width > 800) {
+            scale = 800 / img.width;
+        }
+        
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        editor.style.display = 'block';
+        container.innerHTML = '';
+
+        // Default marker positions (based on 2-column layout typically found in char screen)
+        // Left Col: Hat, Coat, Ring
+        // Right Col: Necklace, Pants, Weapon
+        const boxSize = 60; // Default box size
+        const w = canvas.width;
+        const h = canvas.height;
+
+        const positions = {
+            'hat': { x: w * 0.15, y: h * 0.2 },
+            'necklace': { x: w * 0.70, y: h * 0.2 },
+            'coat': { x: w * 0.15, y: h * 0.45 },
+            'pants': { x: w * 0.70, y: h * 0.45 },
+            'ring': { x: w * 0.15, y: h * 0.7 },
+            'weapon': { x: w * 0.70, y: h * 0.7 }
+        };
+
+        gearTypes.forEach(gear => {
+            const pos = positions[gear.id] || { x: 10, y: 10 };
+            createMarker(gear, pos.x, pos.y, boxSize);
+        });
+    }
+
+    function createMarker(gear, x, y, size) {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.style.position = 'absolute';
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.width = size + 'px';
+        el.style.height = size + 'px';
+        el.style.border = '3px solid #e74c3c';
+        el.style.boxShadow = '0 0 5px rgba(0,0,0,0.5)';
+        el.style.cursor = 'move';
+        el.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+        el.style.zIndex = '10';
+        
+        // Label
+        const label = document.createElement('span');
+        label.textContent = gear.icon;
+        label.style.position = 'absolute';
+        label.style.top = '-25px';
+        label.style.left = '0';
+        label.style.background = 'rgba(0,0,0,0.7)';
+        label.style.color = 'white';
+        label.style.padding = '2px 5px';
+        label.style.borderRadius = '3px';
+        label.style.fontSize = '12px';
+        el.appendChild(label);
+
+        // Resize handle
+        const resize = document.createElement('div');
+        resize.style.width = '10px';
+        resize.style.height = '10px';
+        resize.style.background = '#e74c3c';
+        resize.style.position = 'absolute';
+        resize.style.right = '-5px';
+        resize.style.bottom = '-5px';
+        resize.style.cursor = 'se-resize';
+        el.appendChild(resize);
+
+        // Drag Logic
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY, startLeft, startTop, startW, startH;
+
+        el.addEventListener('mousedown', (e) => {
+            if (e.target === resize) {
+                isResizing = true;
+                startW = el.offsetWidth;
+                startH = el.offsetHeight;
+            } else {
+                isDragging = true;
+                startLeft = el.offsetLeft;
+                startTop = el.offsetTop;
+            }
+            startX = e.clientX;
+            startY = e.clientY;
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                el.style.left = (startLeft + dx) + 'px';
+                el.style.top = (startTop + dy) + 'px';
+            } else if (isResizing) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                const newSize = Math.max(30, startW + dx); // Square aspect
+                el.style.width = newSize + 'px';
+                el.style.height = newSize + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            isResizing = false;
+        });
+
+        document.getElementById('markersContainer').appendChild(el);
+        markers[gear.id] = el;
+    }
+
+    async function analyzeScreenshot() {
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('analysisStatus');
+        
+        status.textContent = translations[currentLang].analyzing;
+        
+        // Initialize Tesseract Worker Once
+        const worker = Tesseract.createWorker({
+            logger: m => console.log(m)
+        });
+
+        try {
+            await worker.load();
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            const PSM = Tesseract.PSM || {};
+            const SINGLE_WORD_PSM = PSM.SINGLE_WORD || 8;
+            const SINGLE_CHAR_PSM = PSM.SINGLE_CHAR || 10;
+
+            for (const gear of gearTypes) {
+                // Update Status
+                status.textContent = `${translations[currentLang].analyzing} (${translations[currentLang].gearNames[gear.id]}...)`;
+
+                const marker = markers[gear.id];
+                if (!marker) continue;
+
+                const rect = {
+                    x: marker.offsetLeft,
+                    y: marker.offsetTop,
+                    w: marker.offsetWidth,
+                    h: marker.offsetHeight
+                };
+
+                // Get image data for this region
+                const imageData = ctx.getImageData(rect.x, rect.y, rect.w, rect.h);
+                
+                // 1. Detect Color (Tier)
+                const tierColor = detectTierColor(imageData);
+                
+                // 2. Detect Stars
+                const stars = detectStars(imageData);
+
+                // 3. Detect Text (T1, T2 etc) - using Tesseract
+                let tLevel = "";
+                try {
+                    await worker.setParameters({
+                        tessedit_char_whitelist: 'T1234I',
+                        tessedit_pageseg_mode: SINGLE_WORD_PSM
+                    });
+
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    const cropW = rect.w * 0.45;
+                    const cropH = rect.h * 0.35;
+                    const scale = 2;
+                    tempCanvas.width = cropW * scale;
+                    tempCanvas.height = cropH * scale;
+                    tempCtx.imageSmoothingEnabled = false;
+                    
+                    tempCtx.drawImage(canvas, rect.x, rect.y, cropW, cropH, 0, 0, tempCanvas.width, tempCanvas.height);
+                    
+                    const cropData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+                    for (let i = 0; i < cropData.data.length; i += 4) {
+                        const brightness = (cropData.data[i] + cropData.data[i+1] + cropData.data[i+2]) / 3;
+                        const val = brightness > 170 ? 255 : 0;
+                        cropData.data[i] = val;
+                        cropData.data[i+1] = val;
+                        cropData.data[i+2] = val;
+                    }
+                    tempCtx.putImageData(cropData, 0, 0);
+
+                    const { data: { text } } = await worker.recognize(tempCanvas);
+                    console.log(`${gear.id} OCR:`, text);
+                    
+                    const normalized = text
+                        .replace(/[^A-Z0-9]/gi,'')
+                        .toUpperCase()
+                        .replace(/I/g,'1')
+                        .replace(/L/g,'1')
+                        .replace(/O/g,'0');
+
+                    if (normalized.includes('T4') || normalized.includes('4T') || normalized.includes('74') || (normalized.includes('T') && normalized.includes('4')) || (!normalized.includes('T') && normalized.includes('4'))) {
+                        tLevel = " T4";
+                    } else if (normalized.includes('T3') || normalized.includes('3T') || normalized.includes('73') || (normalized.includes('T') && normalized.includes('3')) || (!normalized.includes('T') && normalized.includes('3'))) {
+                        tLevel = " T3";
+                    } else if (normalized.includes('T2') || normalized.includes('2T') || normalized.includes('72') || (normalized.includes('T') && normalized.includes('2')) || (!normalized.includes('T') && normalized.includes('2'))) {
+                        tLevel = " T2";
+                    } else if (normalized.includes('T1') || normalized.includes('1T') || normalized.includes('71') || normalized.includes('TI') || (normalized.includes('T') && normalized.includes('1')) || normalized.includes('1')) {
+                        tLevel = " T1";
+                    }
+
+                } catch (err) {
+                    console.error("OCR Error", err);
+                }
+
+                // Secondary digit-only OCR if still unresolved but yellow tag likely exists
+                if (!tLevel) {
+                    try {
+                        const digitCanvas = document.createElement('canvas');
+                        const digitCtx = digitCanvas.getContext('2d');
+                        const digitScale = 3;
+                        const digitX = rect.x + rect.w * 0.28;
+                        const digitY = rect.y;
+                        const digitW = rect.w * 0.22;
+                        const digitH = rect.h * 0.35;
+                        digitCanvas.width = digitW * digitScale;
+                        digitCanvas.height = digitH * digitScale;
+                        digitCtx.imageSmoothingEnabled = false;
+                        digitCtx.drawImage(canvas, digitX, digitY, digitW, digitH, 0, 0, digitCanvas.width, digitCanvas.height);
+
+                        const digitData = digitCtx.getImageData(0, 0, digitCanvas.width, digitCanvas.height);
+                        for (let i = 0; i < digitData.data.length; i += 4) {
+                            const brightness = (digitData.data[i] + digitData.data[i+1] + digitData.data[i+2]) / 3;
+                            const val = brightness > 165 ? 255 : 0;
+                            digitData.data[i] = val;
+                            digitData.data[i+1] = val;
+                            digitData.data[i+2] = val;
+                        }
+                        digitCtx.putImageData(digitData, 0, 0);
+
+                        await worker.setParameters({
+                            tessedit_char_whitelist: '1234',
+                            tessedit_pageseg_mode: SINGLE_CHAR_PSM
+                        });
+
+                        const digitResult = await worker.recognize(digitCanvas);
+                        const digitText = digitResult.data.text.replace(/[^1234]/g,'');
+                        if (digitText.length > 0) {
+                            tLevel = ` T${digitText[0]}`;
+                        }
+                    } catch (err) {
+                        console.error("Digit OCR Error", err);
+                    }
+                }
+
+                // Construct Tier Name
+                let detectedTierName = tierColor + tLevel;
+                
+                // Fallback if invalid combination
+                if (!gearData.some(d => d.tier === detectedTierName)) {
+                    // Try just color
+                    if (gearData.some(d => d.tier === tierColor)) {
+                        detectedTierName = tierColor;
+                    } else {
+                        // Default fallback
+                        detectedTierName = "Green"; 
+                    }
+                }
+
+                // Set inputs
+                const tierSelect = document.getElementById(`${gear.id}-tier`);
+                const starsSelect = document.getElementById(`${gear.id}-stars`);
+                
+                if (tierSelect && starsSelect) {
+                    // Select Tier
+                    // Check if option exists before setting
+                    const tierOption = tierSelect.querySelector(`option[value="${detectedTierName}"]`);
+                    if (tierOption) {
+                        tierSelect.value = detectedTierName;
+                    } else {
+                        console.warn(`Tier ${detectedTierName} not found for ${gear.id}`);
+                    }
+                    
+                    updateStars(gear.id); // Update star options based on new tier
+
+                    // Select Stars (clamp to max available)
+                    let starOption = starsSelect.querySelector(`option[value="${stars}"]`);
+                    if (starOption) {
+                        starsSelect.value = stars;
+                    } else {
+                        const opts = starsSelect.options;
+                        if(opts.length > 0) starsSelect.value = opts[opts.length-1].value;
+                    }
+                }
+            }
+
+            await worker.terminate();
+            status.textContent = translations[currentLang].analyzeDone;
+
+        } catch(err) {
+            console.error("Global Analysis Error", err);
+            status.textContent = "Hata: " + err.message;
+        }
+    }
+
+    function detectTierColor(imageData) {
+        const data = imageData.data;
+        const w = imageData.width;
+        const h = imageData.height;
+        
+        let sumR = 0, sumG = 0, sumB = 0, sampleCount = 0;
+
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const isBorder = x < w*0.10 || x > w*0.90 || y < h*0.10 || y > h*0.90;
+                if (!isBorder) continue;
+
+                if (x < w*0.35 && y < h*0.35) continue;
+                if (x > w*0.65 && y < h*0.35) continue;
+                if (y > h*0.70) continue;
+
+                const idx = (y * w + x) * 4;
+                const r = data[idx];
+                const g = data[idx+1];
+                const b = data[idx+2];
+
+                const [hVal, sVal, lVal] = rgbToHsl(r, g, b);
+                if (lVal < 15 || lVal > 85 || sVal < 20) continue;
+
+                sumR += r;
+                sumG += g;
+                sumB += b;
+                sampleCount++;
+            }
+        }
+
+        if (sampleCount === 0) return "Green";
+
+        const avgR = sumR / sampleCount;
+        const avgG = sumG / sampleCount;
+        const avgB = sumB / sampleCount;
+
+        const tierColorRefs = {
+            Green: [95, 165, 120],
+            Blue: [70, 120, 210],
+            Purple: [150, 110, 200],
+            Gold: [215, 180, 100],
+            Red: [210, 95, 90]
+        };
+
+        let bestMatch = "Green";
+        let minDist = Infinity;
+        for (const [tier, rgb] of Object.entries(tierColorRefs)) {
+            const dist = Math.pow(avgR - rgb[0], 2) + Math.pow(avgG - rgb[1], 2) + Math.pow(avgB - rgb[2], 2);
+            if (dist < minDist) {
+                minDist = dist;
+                bestMatch = tier;
+            }
+        }
+
+        return bestMatch;
+    }
+
+    function detectStars(imageData) {
+        const w = imageData.width;
+        const h = imageData.height;
+        const data = imageData.data;
+        
+        const startY = Math.floor(h * 0.68);
+        const visited = new Uint8Array(w * h);
+        const centers = [];
+
+        for (let y = startY; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                if (visited[y*w+x]) continue;
+
+                const idx = (y * w + x) * 4;
+                const r = data[idx];
+                const g = data[idx+1];
+                const b = data[idx+2];
+                
+                const [hVal, sVal, lVal] = rgbToHsl(r, g, b);
+                const isStarColor = (hVal > 28 && hVal < 68 && sVal > 55 && lVal > 45);
+
+                if (isStarColor) {
+                    let pixelCount = 0;
+                    let minY = y, maxY = y;
+                    const stack = [[x, y]];
+                    visited[y*w+x] = 1;
+
+                    while(stack.length > 0) {
+                        const [cx, cy] = stack.pop();
+                        pixelCount++;
+                        if (cy < minY) minY = cy;
+                        if (cy > maxY) maxY = cy;
+
+                        const neighbors = [
+                            [cx+1, cy], [cx-1, cy], [cx, cy+1], [cx, cy-1]
+                        ];
+
+                        for (const [nx, ny] of neighbors) {
+                            if (nx >= 0 && nx < w && ny >= startY && ny < h) {
+                                const nIdx = ny*w + nx;
+                                if (!visited[nIdx]) {
+                                    const nr = data[nIdx*4];
+                                    const ng = data[nIdx*4+1];
+                                    const nb = data[nIdx*4+2];
+                                    const [nh, ns, nl] = rgbToHsl(nr, ng, nb);
+                                    
+                                    if (nh > 25 && nh < 75 && ns > 45 && nl > 35) {
+                                        visited[nIdx] = 1;
+                                        stack.push([nx, ny]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (pixelCount >= 15 && pixelCount <= 450) {
+                        const centerY = (minY + maxY) / 2;
+                        centers.push(centerY);
+                    }
+                }
+            }
+        }
+        
+        centers.sort((a, b) => a - b);
+        const merged = [];
+        const minGapY = h * 0.12;
+
+        centers.forEach(center => {
+            if (merged.length === 0 || Math.abs(center - merged[merged.length - 1]) > minGapY) {
+                merged.push(center);
+            }
+        });
+
+        return Math.min(3, merged.length);
+    }
+
+    function rgbToHsl(r, g, b) {
+        r /= 255, g /= 255, b /= 255;
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+
+        if (max == min) {
+            h = s = 0; // achromatic
+        } else {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+
+        return [h * 360, s * 100, l * 100];
+    }
+
+    function init() {
+        const grid = document.getElementById('gearGrid');
+        const tiers = [...new Set(gearData.map(item => item.tier))];
+
+        // 1. Create Cards placeholders FIRST
+        gearTypes.forEach(gear => {
+            const card = document.createElement('div');
+            card.className = 'gear-card p-med'; 
+            card.id = `card-${gear.id}`;
+            grid.appendChild(card);
+        });
+
+        // 2. Language Detection and Update Content
+        const browserLang = navigator.language || navigator.userLanguage; 
+        if (browserLang.startsWith('tr')) changeLanguage('tr');
+        else if (browserLang.startsWith('de')) changeLanguage('de');
+        else changeLanguage('en');
+    }
+
+    function changeLanguage(lang) {
+        if (!translations[lang]) return;
+        currentLang = lang;
+
+        // Update static elements
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[lang][key]) {
+                el.innerHTML = translations[lang][key];
+            }
+        });
+
+        // Update buttons active state
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent.toLowerCase().includes(lang)) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Re-render dynamic content
+        updateGearGrid();
+    }
+
+    function updateGearGrid() {
+        const tiers = [...new Set(gearData.map(item => item.tier))];
+        const t = translations[currentLang];
+
+        gearTypes.forEach(gear => {
+            const card = document.getElementById(`card-${gear.id}`);
+            const currentTierVal = document.getElementById(`${gear.id}-tier`)?.value || tiers[0];
+            const currentStarVal = document.getElementById(`${gear.id}-stars`)?.value || "0";
+            const currentPriority = document.getElementById(`${gear.id}-priority`)?.value || "1";
+            
+            card.innerHTML = `
+                <div class="gear-header">
+                    <span class="gear-icon">${gear.icon}</span>
+                    <span class="gear-name">${t.gearNames[gear.id]}</span>
+                </div>
+                <div class="form-group">
+                    <label>${t.currentTier}</label>
+                    <select id="${gear.id}-tier" onchange="updateStars('${gear.id}')">
+                        ${tiers.map(tier => `<option value="${tier}" ${tier === currentTierVal ? 'selected' : ''}>${tier}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>${t.currentStars}</label>
+                    <select id="${gear.id}-stars">
+                        <!-- Populated by updateStars -->
+                    </select>
+                </div>
+                <div class="gear-priority">
+                    <span class="priority-label">${t.priorityLabel}</span>
+                    <select id="${gear.id}-priority" class="priority-select" onchange="updateCardStyle('${gear.id}')">
+                        <option value="2" ${currentPriority === "2" ? 'selected' : ''}>${t.priorityHigh}</option>
+                        <option value="1" ${currentPriority === "1" ? 'selected' : ''}>${t.priorityMed}</option>
+                        <option value="0" ${currentPriority === "0" ? 'selected' : ''}>${t.priorityLow}</option>
+                    </select>
+                </div>
+            `;
+            updateCardStyle(gear.id);
+            updateStars(gear.id, currentStarVal);
+        });
+    }
+
+    function updateCardStyle(gearId) {
+        const select = document.getElementById(`${gearId}-priority`);
+        const card = document.getElementById(`card-${gearId}`);
+        const val = parseInt(select.value);
+        
+        card.classList.remove('p-high', 'p-med', 'p-low');
+        
+        if (val === 2) card.classList.add('p-high');
+        else if (val === 1) card.classList.add('p-med');
+        else card.classList.add('p-low');
+    }
+
+    function updateStars(gearId, preferredValue = null) {
+        const tierSelect = document.getElementById(`${gearId}-tier`);
+        const starsSelect = document.getElementById(`${gearId}-stars`);
+        
+        if (!tierSelect || !starsSelect) return;
+
+        const selectedTier = tierSelect.value;
+        const t = translations[currentLang];
+
+        // Save current star selection if possible to restore after rebuild, otherwise default to 0
+        const currentStarVal = preferredValue || starsSelect.value;
+
+        starsSelect.innerHTML = '';
+        const tierData = gearData.filter(item => item.tier === selectedTier);
+        
+        tierData.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.stars;
+            option.textContent = `${item.stars}${t.starsSuffix}`;
+            starsSelect.appendChild(option);
+        });
+        
+        // Try to restore or default to 0
+        if (currentStarVal && tierData.some(i => i.stars == currentStarVal)) {
+            starsSelect.value = currentStarVal;
+        }
+    }
+
+    function formatNumber(num) {
+        // Format based on browser locale or current language
+        return new Intl.NumberFormat(currentLang === 'tr' ? 'tr-TR' : (currentLang === 'de' ? 'de-DE' : 'en-US')).format(num);
+    }
+
+    function calculateAllUpgrades() {
+        const t = translations[currentLang];
+        let satin = parseInt(document.getElementById('satin').value) || 0;
+        let gilded = parseInt(document.getElementById('gilded').value) || 0;
+        let vision = parseInt(document.getElementById('vision').value) || 0;
+
+        // Load current state for all items
+        let currentStates = gearTypes.map(gear => {
+            const t = document.getElementById(`${gear.id}-tier`).value;
+            const s = parseInt(document.getElementById(`${gear.id}-stars`).value);
+            const p = parseInt(document.getElementById(`${gear.id}-priority`).value);
+            const dataIndex = gearData.findIndex(d => d.tier === t && d.stars === s);
+            return {
+                ...gear,
+                dataIndex: dataIndex,
+                currentData: gearData[dataIndex],
+                priority: p // 2: High, 1: Med, 0: Low
+            };
+        });
+
+        // Validate
+        if (currentStates.some(s => s.dataIndex === -1)) {
+            alert(t.invalidData);
+            return;
+        }
+
+        let startPower = currentStates.reduce((sum, item) => sum + (item.currentData.power || 0), 0);
+        let upgradePath = [];
+
+        // Optimization Loop: Find best affordable upgrade across all items
+        while (true) {
+            let bestCandidate = null;
+            
+            // Group potential upgrades by priority
+            let candidatesByPriority = { 2: [], 1: [], 0: [] };
+
+            for (let i = 0; i < currentStates.length; i++) {
+                let itemState = currentStates[i];
+                let nextIndex = itemState.dataIndex + 1;
+
+                if (nextIndex < gearData.length) {
+                    let nextData = gearData[nextIndex];
+                    let cost = nextData.cost;
+                    
+                    // Check affordability
+                    if (satin >= cost.satin && gilded >= cost.gilded && vision >= cost.vision) {
+                        // Calculate "Cost Value" (sum of materials)
+                        let totalMaterialCost = cost.satin + cost.gilded + cost.vision;
+                        
+                        candidatesByPriority[itemState.priority].push({
+                            itemIndex: i,
+                            nextData: nextData,
+                            cost: cost,
+                            nextIndex: nextIndex,
+                            totalCost: totalMaterialCost
+                        });
+                    }
+                }
+            }
+
+            // Pick best candidate based on Priority Hierarchy
+            // Check High (2) first
+            if (candidatesByPriority[2].length > 0) {
+                // Find cheapest in High
+                candidatesByPriority[2].sort((a, b) => a.totalCost - b.totalCost);
+                bestCandidate = candidatesByPriority[2][0];
+            } 
+            // Then Med (1)
+            else if (candidatesByPriority[1].length > 0) {
+                candidatesByPriority[1].sort((a, b) => a.totalCost - b.totalCost);
+                bestCandidate = candidatesByPriority[1][0];
+            }
+            // Then Low (0)
+            else if (candidatesByPriority[0].length > 0) {
+                candidatesByPriority[0].sort((a, b) => a.totalCost - b.totalCost);
+                bestCandidate = candidatesByPriority[0][0];
+            }
+
+            if (bestCandidate) {
+                // Perform upgrade
+                satin -= bestCandidate.cost.satin;
+                gilded -= bestCandidate.cost.gilded;
+                vision -= bestCandidate.cost.vision;
+
+                // Update state
+                let item = currentStates[bestCandidate.itemIndex];
+                item.dataIndex = bestCandidate.nextIndex;
+                item.currentData = bestCandidate.nextData;
+
+                // Log
+                upgradePath.push({
+                    itemName: t.gearNames[item.id],
+                    icon: item.icon,
+                    toTier: bestCandidate.nextData.tier,
+                    toStars: bestCandidate.nextData.stars,
+                    cost: bestCandidate.cost,
+                    power: bestCandidate.nextData.power,
+                    priorityLabel: item.priority === 2 ? t.priorityHigh : (item.priority === 0 ? t.priorityLow : "")
+                });
+            } else {
+                // No more affordable upgrades found
+                break;
+            }
+        }
+
+        // Results
+        let finalPower = currentStates.reduce((sum, item) => sum + (item.currentData.power || 0), 0);
+        
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('startPower').textContent = formatNumber(startPower);
+        document.getElementById('finalTotalPower').textContent = formatNumber(finalPower);
+        document.getElementById('powerGain').textContent = "+" + formatNumber(finalPower - startPower);
+
+        document.getElementById('remSatin').textContent = formatNumber(satin);
+        document.getElementById('remGilded').textContent = formatNumber(gilded);
+        document.getElementById('remVision').textContent = formatNumber(vision);
+
+        // Render Path
+        const pathList = document.getElementById('upgradePath');
+        pathList.innerHTML = '';
+        if (upgradePath.length === 0) {
+            pathList.innerHTML = `<li class="path-item">${t.noUpgrade}</li>`;
+        } else {
+            upgradePath.forEach((step, idx) => {
+                let priorityBadge = step.priorityLabel ? `<span style="font-size:0.8em; background:#eee; padding:2px 6px; border-radius:4px; margin-left:5px;">${step.priorityLabel}</span>` : '';
+                
+                const li = document.createElement('li');
+                li.className = 'path-item';
+                li.innerHTML = `
+                    <div class="path-details">
+                        <strong>${idx + 1}. ${step.icon} ${step.itemName} ${priorityBadge} ➡️ ${step.toTier} ${step.toStars}${t.starsSuffix.replace('(s)','')}</strong>
+                        <span class="material-cost">
+                            -${formatNumber(step.cost.satin)} Satin, 
+                            -${formatNumber(step.cost.gilded)} Gilded, 
+                            -${formatNumber(step.cost.vision)} Vision
+                        </span>
+                    </div>
+                    <div style="text-align: right; font-size: 0.9em; color: #27ae60;">
+                        ${t.power}: ${formatNumber(step.power)}
+                    </div>
+                `;
+                pathList.appendChild(li);
+            });
+        }
+
+        // Render Final States
+        const finalGrid = document.getElementById('finalGearStates');
+        finalGrid.innerHTML = '';
+        currentStates.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'gear-card';
+            div.style.padding = '10px';
+            div.innerHTML = `
+                <div style="text-align: center;">
+                    <div style="font-size: 1.5em;">${item.icon}</div>
+                    <div style="font-weight: bold;">${t.gearNames[item.id]}</div>
+                    <div style="color: var(--primary-color); margin-top: 5px;">
+                        ${item.currentData.tier}<br>
+                        ${item.currentData.stars} ${t.starsSuffix.replace('(s)','')}
+                    </div>
+                </div>
+            `;
+            finalGrid.appendChild(div);
+        });
+        
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    init();
+</script>
+
+</body>
+</html>
+
